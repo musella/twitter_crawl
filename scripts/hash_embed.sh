@@ -15,7 +15,7 @@ set -e
 ##   rm text8.zip
 ## fi
 
-PREFIX=../data/models/hastags
+PREFIX=../data/models/hashtags
 CORPUS=../data/preproc/hash_corpus.txt
 VOCAB_FILE=$PREFIX/hash_vocab.txt
 COOCCURRENCE_FILE=$PREFIX/hash_cooccurrence.bin
@@ -34,18 +34,18 @@ X_MAX=10
 
 set -x
 
-## mkdir -p $PREFIX
-## 
-## $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
-## 
-## $BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE
-## 
-## $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
-## 
-## 
-## $BUILDDIR/glove -save-file $SAVE_FILE.d5 -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size 5 -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
-## 
-## $BUILDDIR/glove -save-file $SAVE_FILE.d10 -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size 10 -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
+mkdir -p $PREFIX
+
+$BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
+
+$BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE
+
+$BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
+
+
+$BUILDDIR/glove -save-file $SAVE_FILE.d5 -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size 5 -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
+
+$BUILDDIR/glove -save-file $SAVE_FILE.d10 -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size 10 -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
 
 ./glove2word2vec.py $SAVE_FILE.d5.txt $SAVE_FILE.d5.gensim.txt
 ./glove2word2vec.py $SAVE_FILE.d10.txt $SAVE_FILE.d10.gensim.txt

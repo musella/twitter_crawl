@@ -57,7 +57,7 @@ l = StdOutListener()
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
-stream = Stream(auth, l)
+stream = Stream(auth, l,tweet_mode="extended")
 stream.filter(track=['NeurIPS2018','MachineLearning']) # ,'AI','ArtificialIntelligence'
 
 
