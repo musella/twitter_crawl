@@ -7,8 +7,11 @@ import pandas as pd
 
 def load(fname):
     with open(fname) as fin:
-        return json.load(fin)
-    return {}
+        try:
+            return json.load(fin)
+        except Exception as e:
+            print("Error reading %s: %s" % (fname, str(e)))
+    return None
 
 def load_all_tweets(path,keys=["id","text","lang","retweeted","retweet_count","truncated","user/name"],lang="en"):
     tweets = glob.glob(path+"/tweet_*.txt")
@@ -17,7 +20,7 @@ def load_all_tweets(path,keys=["id","text","lang","retweeted","retweet_count","t
     if filter_lang and not "lang" in keys:
         keys.append("lang")
 
-    df = pd.DataFrame( [extract_info(tweet,keys) for tweet in sorted(tweets) ] )
+    df = pd.DataFrame( [ info for info in map(lambda x: extract_info(x,keys), sorted(tweets)) if info is not None ] )
     if lang is not None and lang != "":
         df = df[df["lang"] == lang]
 
@@ -31,6 +34,7 @@ def get_info(key,content):
 
 def extract_info(fname,keep_keys):
     content = load(fname)
+    if content is None: return None
     return {key:get_info(key,content) for key in keep_keys}
 
 def decontracted(phrase):
@@ -43,7 +47,6 @@ def decontracted(phrase):
     phrase = re.sub(r"[\'’]re", " are", phrase)
     # phrase = re.sub(r"\'s", " is", phrase)
     phrase = re.sub(r"[\'’]d", " would", phrase)
-    phrase = re.sub(r"[\'’]ll", " will", phrase)
     phrase = re.sub(r"[\'’]t", " not", phrase)
     phrase = re.sub(r"[\'’]ve", " have", phrase)
     phrase = re.sub(r"[\'’]m", " am", phrase)
@@ -57,7 +60,8 @@ def decontracted(phrase):
 def cleanup_text(phrase,pre_filters,post_filters):
     phrase = re.sub(r"[%s]" % pre_filters, " ", phrase)
     phrase = decontracted(phrase)
-    phrase = re.sub(r"[^ ]+…","<trunc>",phrase)
+    #phrase = re.sub(r"[^ ]+…","<trunc>",phrase)
+    phrase = re.sub(r"[^ ]+…"," ",phrase)
 
     # translated to python from https://nlp.stanford.edu/projects/glove/preprocess-twitter.rb
     # Different regex parts for smiley faces
