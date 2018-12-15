@@ -4,17 +4,19 @@ import json
 import glob
 import numpy as np
 import pandas as pd
+from gzip import open as gopen
+
 
 def load(fname):
-    with open(fname) as fin:
+    with gopen(fname) as fin:
         try:
             return json.load(fin)
         except Exception as e:
             print("Error reading %s: %s" % (fname, str(e)))
     return None
 
-def load_all_tweets(path,keys=["id","text","lang","retweeted","retweet_count","truncated","user/name"],lang="en"):
-    tweets = glob.glob(path+"/tweet_*.txt")
+def load_all_tweets(path,keys=["id","text","lang","retweeted","retweet_count","truncated","user/name","retweeted_status/extended_tweet/full_text","extended_tweet/full_text"],lang="en"):
+    tweets = glob.glob(path+"/tweet_*.txt.gz")
 
     filter_lang = (lang is not None and lang != "")
     if filter_lang and not "lang" in keys:
@@ -29,6 +31,7 @@ def load_all_tweets(path,keys=["id","text","lang","retweeted","retweet_count","t
 def get_info(key,content):
     path = key.split("/")
     for p in path:
+        if not p in content: return None
         content = content[p]
     return content
 

@@ -106,6 +106,7 @@ venv.bak/
 config.yml
 
 data/raw/*.txt
+data/raw/*.txt.gz
 data/models
 data/preproc
 input

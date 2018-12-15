@@ -35,13 +35,16 @@ beam_search = BeamSearch(gen_model,tok_model)
 
 def load_my_model():
         global model
+        global padto
         global tk
-        data_folder = "../data"
-        model = load_model(data_folder+'/models/gru_unk/gru-model.hd5')
+        model = load_model(gen_model,compile=False)
+        padto = int(model.input.shape[1])
         
-        with open(data_folder+"/models/sequences/tokenizer.pkl","rb") as fin:
+        with open(tok_model,"rb") as fin:
                 tk = pickle.loads(fin.read())
-
+        print('Model '+str(model))
+        print('Tokenizer '+str(tk))
+                
 
 @app.route('/datcomplete', methods=['GET', 'POST'])
 def datcomplete():

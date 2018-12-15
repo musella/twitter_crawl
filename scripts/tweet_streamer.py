@@ -25,6 +25,7 @@ access_token_secret=config["access_token_secret"]
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
+from gzip import open as gopen
 
 import glob
 
@@ -34,15 +35,15 @@ class StdOutListener(StreamListener):
     """
     
     def __init__(self,folder="../data/raw"):
-        tweets = glob.glob(folder+"/tweet_*.txt")
+        tweets = glob.glob(folder+"/tweet_*.txt.gz")
         ## print(tweets[:10])
-        latest = max(map(lambda x: int(x.rsplit(".")[-2].rsplit("_")[1]), tweets))
+        latest = max(map(lambda x: int(x.rsplit(".")[-3].rsplit("_")[1]), tweets))
         self.next_id = latest + 1
         self.folder = folder
         print("Next id %d" % self.next_id)
         
     def on_data(self, data):
-        with open("%s/tweet_%d.txt" % (self.folder,self.next_id), "w+") as fout:
+        with gopen("%s/tweet_%d.txt.gz" % (self.folder,self.next_id), "wt+") as fout:
             fout.write( data )
             print('.',)
         self.next_id += 1
