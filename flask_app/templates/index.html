@@ -64,14 +64,38 @@ href{
   border: none;
   color: #ffffff;
 }
+
+.display {
+    background-color: white;
+}
+
+.loader {
+    border: 8px solid lightgrey;
+    border-top: 8px solid darkgrey;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 </style>
 
 
 <main>
 <section>	  
   <div class="container">
-    <br> Tweet autocompleteion <label for="search_post_data"></label>
-    <input id="search_post_data" name="search_post_data" placeholder="Select a resource or enter your own, e.g. Wormbase"></input>
+    <h4>Suggest next word <label for="get_next_word"></label></h4>
+    <input id="get_next_word" class="complete_me", name="get_next_word" placeholder="Start typying your tweet"></input>
+
+<br><br><br><br><br><br><br><br>
+
+    <h4> Generate full sentence <label for="get_sentence"></label></h4>
+    <input id="get_sentence" class="display_me", name="get_sentence" placeholder="Type the first words and hit return"></input>
   </div>
 
   <br><br><br><br>
@@ -82,66 +106,70 @@ href{
 
 <script type="text/javascript">
   // Send data to autocomplete to dynamically extend data source
+  
+  
+  
     $(document).ready(function(){
-	console.log("AAAAAAAAA");
-	$(document).on('keyup', function(e){
+	$(".complete_me").on('keyup', function(e){
             var text = e.target.value;
-	    console.log(text);
-            $("#search_post_data").autocomplete({
+	    // console.log(e.target.id);
+	    obj = "#"+e.target.id
+            $(obj).autocomplete({
   		source: function(request, response) {
-  		    $.ajax({url: '{{ url_for("datcomplete") }}',
+  		    $.ajax({url: '{{ url_for("autocomplete") }}',
   			    contentType: 'application/json',
   			    method: "POST",
   			    dataType : 'json',
-  			    data: JSON.stringify({variable:text}),
+  			    data: JSON.stringify({input:text,what:e.target.id}),
   			    success: function(data) { console.log(data);
 						      response(data.suggestions); }
   			   }
   			  );
   		}
   	    });
-	/// 	.data("ui-autocomplete")._renderItem = function(ul, items) {
-	/// 	console.log("OOOOOOOOOOOOO");
-	/// 	console.log(items);
-	/// 	var ii = 0;
-	/// 	for(ii=0; ii<items.lenght; ii++) {
-	/// 	    item = items[ii]
-	/// 	    console.log(item.label);
-	/// 	    var $a = $("<a></a>").text(item.label);
-	/// 	}
-	/// 	return $("<li></li>").append($a).appendTo(ul);
-	///     };
 	});
+	$(".display_me").on('keyup', function(e){
+	    var key = e.which;
+	    console.log(key);
+	    if (key != 13) { return; }
+	    
+	    e.preventDefault();
+	    if (window.preventDuplicateKeyPresses)
+		return;
+	    window.preventDuplicateKeyPresses = true;
+	    window.setTimeout(function() { window.preventDuplicateKeyPresses = false; }, 500 );
+
+	    var text = e.target.value;
+	    // console.log(e.target.id);
+	    obj = "#"+e.target.id
+	    trueColor = $(obj).css('backgroundColor');
+	    $('.display').remove();
+	    $(obj).after( $("<div class='loader'/>") );
+	    $(obj).after( $("<ul class='display' id='"+e.target.id+"_display'></ul>") );
+	    obj = $("#"+e.target.id+"_display");
+	    $.ajax({url: '{{ url_for("autocomplete") }}',
+  		    contentType: 'application/json',
+  		    method: "POST",
+  		    dataType : 'json',
+  		    data: JSON.stringify({input:text,what:e.target.id}),
+  		    success: function(data) { console.log(data);
+					      var item;
+					      data = data["suggestions"];
+					      
+					      for (item=0; item < data.length; item++) {
+						  console.log(data[item]);
+						  li = $("<li/>").appendTo(obj);
+						  li.text(data[item]).html();
+					      }
+					    },
+		    complete: function() { $(".loader").remove(); }
+  		   }
+  		  );
+  	});
 	
     });
 
   
-/// $(document).ready(function() {
-///   /// var keypath = "My Test Keypath"
-///   /// console.log(keypath)
-/// 
-///   $("#search_post_data").keyup(function(e){
-///    
-///   var keypath = e.target.value;
-///   $.ajax({
-///         url: '{{ url_for("datcomplete") }}',
-///         contentType: 'application/json',
-///         method: "POST",
-///         dataType : 'json',
-///         data: JSON.stringify({variable:keypath})
-///     }).done(function (data) {
-///         console.log(data)
-///         $("#search_post_data").autocomplete({
-///             source: data.matching_results,
-///             minLength: 1
-///         }).data("ui-autocomplete")._renderItem = function(ul, item) {
-///           var $a = $("<a></a>").text(item.label);
-///           //highlightText(this.term, $a);
-///           return $("<li></li>").append($a).appendTo(ul);
-///         };
-///     });
-///   });
-/// });
 </script>
 
 

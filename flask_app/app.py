@@ -22,13 +22,12 @@ from models import BeamSearch
 app = Flask(__name__)
 model = None
 tk = None
-nsuggestions = 3
-horizon = 1
-## span = 3 
+nsuggestions = 5
 padto = None
-## data_folder = "../data/v1"
 data_folder = "../data/v1"
 gen_model = data_folder+"/models/gru_unk/gru-model.hd5"
+## data_folder = "../data/v2"
+## gen_model = data_folder+"/models/gru/gru-model.hd5"
 tok_model = data_folder+"/models/sequences/tokenizer.pkl"
 
 beam_search = BeamSearch(gen_model,tok_model)
@@ -45,41 +44,36 @@ def load_my_model():
         print('Model '+str(model))
         print('Tokenizer '+str(tk))
                 
-
-@app.route('/datcomplete', methods=['GET', 'POST'])
-def datcomplete():
-        print("** datcomplete() called")
+def run_beam_search(request,horizon):
         if request.method == 'POST':
                 print("POST request")
         else:
                 print("GET request")
-
-
-        ### if model is None:
-        ###         load_my_model()
                 
-        jsonData = request.json['variable']
+        text = request.json['input']
 
-        suggestions = beam_search.predict(jsonData,nsuggestions,1)
-        ### for horizon in range(1,10):
-        ###         suggestions += beam_search.predict(jsonData,nsuggestions,horizon)
-        ###         suggestions += ["-"*50]
+        print("Horizon", horizon)
+        print("Text", text)
+        suggestions = beam_search.predict(text,nsuggestions,horizon)
                 
         return jsonify(suggestions=suggestions)
+
         
-        ## seq = tk.texts_to_sequences( [jsonData] )
-        ## nel = len(seq[0])
-        ## X = pad_sequences(seq,padto)
-        ## preds = model.predict(X)[:,-1,:].argsort(-1)[0,-nsuggestions:]
-        ## preds = tk.sequences_to_texts( [ [pred] for pred in reversed(preds) ] )
-        ## suggestions = [ jsonData+" "+pred for pred in preds ]
-        ## return jsonify(suggestions=suggestions)
+@app.route('/autocomplete', methods=['GET', 'POST'])
+def autocomplete():
+        what = request.json["what"]
+        if what == "get_next_word":
+                return run_beam_search(request,1)
+        elif what == 'get_sentence':
+                return run_beam_search(request,50)
         
 
 # Route to home page
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def show_home():
+        if beam_search.model is None:
+                beam_search.load_model()
         return render_template('index.html')
 
 

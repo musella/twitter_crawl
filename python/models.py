@@ -68,29 +68,34 @@ class BeamSearch:
         candidates = []
         log_probs1 = []
         seqs_to_extend = []
+        log_probs0_to_extend = []
         for seq,log_prob0 in zip(seqs,log_probs0):
             if seq[-1] == self.stop_word:
                 candidates.append(seq)
                 log_probs1.append(log_prob0)
             else:
                 seqs_to_extend.append(seq)
+                log_probs0_to_extend.append(log_prob0)
+                
+        ## print( self.tk.sequences_to_texts(seqs_to_extend) )
 
         # run the model prediction for sequences that have not yet ended
-        X = pad_sequences(seqs_to_extend,self.padto)
-        probs = self.model.predict(X)[:,-1,:]
-        if self.unk_word is not None:
-            probs[:,self.unk_word] = 0.
+        if len(seqs_to_extend) > 0:
+            X = pad_sequences(seqs_to_extend,self.padto)
+            probs = self.model.predict(X)[:,-1,:]
+            if self.unk_word is not None:
+                probs[:,self.unk_word] = 0.
 
-        # extract the top nsuggestions for each sequence that needs to be expanded
-        preds = np.flip(probs.argsort(-1)[:,-nsuggestions:],-1)
-        # expend the current sequences with the new suggestions and compute the
-        # corresponding log-probabilities
-        for seq, log_prob0, pred, prob in zip(seqs,log_probs0,preds,probs):
-            seq = seq
-            for ipred in pred:
-                ilog_prob = np.log(prob[ipred])
-                candidates.append( seq+[ipred] )
-                log_probs1.append( log_prob0+ilog_prob )
+            # extract the top nsuggestions for each sequence that needs to be expanded
+            preds = np.flip(probs.argsort(-1)[:,-nsuggestions:],-1)
+            # expend the current sequences with the new suggestions and compute the
+            # corresponding log-probabilities
+            for seq, log_prob0, pred, prob in zip(seqs_to_extend,log_probs0_to_extend,preds,probs):
+                seq = seq
+                for ipred in pred:
+                    ilog_prob = np.log(prob[ipred])
+                    candidates.append( seq+[ipred] )
+                    log_probs1.append( log_prob0+ilog_prob )
 
         # extract and return the nsuggestions with largest log-probabilities
         log_probs1 = np.array(log_probs1)
@@ -112,14 +117,15 @@ class BeamSearch:
             self.load_model()
             
         seq = self.tk.texts_to_sequences( [stub,stub] )
-        print(seq)
+        ## print(seq)
         nel = len(seq[0])
         
         candidates = seq
         log_probs = [0.]
         
         for istep in range(horizon):
-            candidates, log_probs = self.predict_next( candidates, log_probs, nsuggestions )
+            ## print(istep, candidates, log_probs)
+            candidates, log_probs = self.predict_next( candidates, log_probs, nsuggestions )            
         candidates = self.tk.sequences_to_texts( [cand[nel:] for cand in candidates] )
         
         return [stub+" "+cand for cand in candidates]
